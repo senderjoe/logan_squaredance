@@ -24,7 +24,6 @@ AccelStepper stepper1(FULLSTEP, 9, 11, 10, 12);
 AccelStepper stepper2(FULLSTEP, 8, 6, 7, 5);
 AccelStepper stepper3(FULLSTEP, 4, 2, 3, 17);
 
-// put function declarations here:
 void doRotation(AccelStepper &stepper, float rotations); 
 void initStepper(AccelStepper &stepper);
 void alignBySensor(AccelStepper &stepper, int sensorPin);
@@ -38,8 +37,7 @@ int currentStage;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  // analogReference(EXTERNAL);
-
+  
   initStepper(stepper0);
   initStepper(stepper1);
   initStepper(stepper2);
@@ -50,15 +48,12 @@ void setup() {
   alignBySensor(stepper2, A1);
   alignBySensor(stepper3, A2);
  
-  delay(1000);
-  // stepper0.setMaxSpeed(RUNSPEED);
- 
+  delay(1000); 
   initStage(0);
 }
 
 
 void loop() {
-  // put your main code here, to run repeatedly:
   if (stageComplete() && currentStage != -1) {
     initStage(currentStage + 1);
   }
@@ -67,13 +62,12 @@ void loop() {
   stepper1.run();   
   stepper2.run();   
   stepper3.run();   
-  // Serial.write(digitalRead(A0));
+
   // int sensorValue = analogRead(A0);
   // Serial.println(sensorValue);
 }
 
-// put function definitions here:
-
+// rotate by revolutions
 void doRotation(AccelStepper &stepper, float rotations){
   // Rotate
   stepper.moveTo(stepper.currentPosition() + static_cast<int>(STEP_PER_REVOLUTION * rotations)); 
@@ -86,6 +80,7 @@ void initStepper(AccelStepper &stepper) {
   stepper.setCurrentPosition(0); // set position
 }
 
+// align to starting position using hall effect sensors on motor shafts
 void alignBySensor(AccelStepper &stepper, int sensorPin) {
   int alignMode = 0;  
   int lowStart = 0;
@@ -95,7 +90,6 @@ void alignBySensor(AccelStepper &stepper, int sensorPin) {
   int sensorAverage = 0;
   int lastTen[10] = {};
 
-  // stepper.moveTo(STEP_PER_REVOLUTION * 2);
   stepper.setSpeed(INITSPEED);
   stepper.setMaxSpeed(INITSPEED);
   doRotation(stepper, 2);
@@ -111,7 +105,6 @@ void alignBySensor(AccelStepper &stepper, int sensorPin) {
     stepper.run();
     sensorAverage = getAverage(lastTen, sensorValue);
   }
-
 
   // find start of high
   while (alignMode == 1) {
@@ -143,9 +136,8 @@ void alignBySensor(AccelStepper &stepper, int sensorPin) {
     stepper.run();
   
   }
-
-  // wraps around 0
-  if (lowEnd - lowStart < 0) {  
+  
+  if (lowEnd - lowStart < 0) {  // high zone wraps around 0
     midpoint = (lowStart + lowEnd + STEP_PER_REVOLUTION)/2 % STEP_PER_REVOLUTION;
   } else {
     midpoint = (lowStart + lowEnd)/2;
@@ -163,12 +155,9 @@ void alignBySensor(AccelStepper &stepper, int sensorPin) {
 
   stepper.setSpeed(RUNSPEED);
   stepper.setMaxSpeed(RUNSPEED);
-  // stepper.moveTo(midpoint + OFFSET1);
   stepper.moveTo(midpoint);
-  // stepper.moveTo(maxPosition);
   stepper.runToPosition();
   stepper.setCurrentPosition(0);
-  
   
   Serial.println("Alignment complete");
   
@@ -178,6 +167,7 @@ void testSensor() {
 
 }
 
+// get average of last 10 sensor values 
 int getAverage (int (&lastTen)[10], int sensorValue) {
   int total = sensorValue;
   for (int i = 0; i < 9; i++) {
